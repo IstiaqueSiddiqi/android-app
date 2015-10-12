@@ -1,0 +1,90 @@
+<!--<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingLeft="@dimen/activity_horizontal_margin"
+                android:paddingRight="@dimen/activity_horizontal_margin"
+                android:paddingTop="@dimen/activity_vertical_margin"
+                android:paddingBottom="@dimen/activity_vertical_margin"
+                tools:context=".MainActivity">
+
+    <ListView
+        android:id="@+id/lawyer_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="#000"
+        android:divider="@color/bright_foreground_inverse_material_light"
+        android:dividerHeight="1dp"
+        android:focusable="false" />
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="20dp"
+        android:layout_marginRight="20dp">
+
+        <ImageButton
+            android:id="@+id/filterButton"
+            android:layout_width="55dp"
+            android:layout_height="55dp"
+            android:scaleType="fitCenter"
+            android:adjustViewBounds="true"
+            android:src="@drawable/filtering"
+            android:layout_gravity="right"/>
+
+    </RelativeLayout>
+
+</RelativeLayout>-->
+
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" android:background="#000">
+
+<RelativeLayout
+    android:id="@+id/top"
+    android:layout_width="fill_parent"
+    android:layout_height="40dp"
+    android:layout_margin="5dp" >
+
+    <EditText
+        android:id="@+id/searchBox"
+        android:layout_width="fill_parent"
+        android:layout_height="40dp"
+        android:layout_alignParentTop="true"
+        android:layout_toLeftOf="@+id/filterButton"
+        android:background="@android:color/white"
+        android:padding="5dp"
+        android:hint="Search"
+        android:imeOptions="actionSearch"
+        android:singleLine="true">
+    </EditText>
+
+    <ImageButton
+        android:id="@+id/filterButton"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
+        android:src="@drawable/filter"
+        android:background="@android:color/white"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:padding="5dp"/>
+</RelativeLayout>
+
+<ListView
+    android:id="@+id/lawyer_list"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_below="@id/top"
+    android:layout_marginBottom="5dp"
+    android:layout_marginTop="5dp"
+    android:cacheColorHint="@android:color/transparent"
+    android:divider="@android:color/white"
+    android:dividerHeight="2dp" >
+</ListView>
+</RelativeLayout>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent" android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+    <ImageView
+        android:id="@+id/proimg"
+
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:src="@drawable/ic_launcher"
+        android:layout_marginTop="5dp"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"/>
+
+    <TextView
+        android:id="@+id/lawyerName"
+
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_alignTop="@+id/proimg"
+        android:layout_marginLeft="10dp"
+        android:layout_toRightOf="@+id/proimg"
+        android:textStyle="bold"
+        android:textColor="@color/bright_foreground_inverse_material_light"
+        android:textAppearance="?android:attr/textAppearanceMedium"/>
+
+    <TextView
+        android:id="@+id/lawyerExpertise"
+
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_alignTop="@+id/proimg"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="25dp"
+        android:layout_toRightOf="@+id/proimg"
+        android:textStyle="italic"
+        android:textColor="@color/bright_foreground_inverse_material_light"/>
+
+    <TextView
+        android:id="@+id/lawyerContact"
+
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_alignTop="@+id/proimg"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="45dp"
+        android:layout_toRightOf="@+id/proimg"
+        android:textColor="@color/bright_foreground_inverse_material_light"/>
+
+    <TextView
+        android:id="@+id/lawyerAddress"
+
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_alignTop="@+id/proimg"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="65dp"
+        android:layout_toRightOf="@+id/proimg"
+        android:textColor="@color/bright_foreground_inverse_material_light"/>
+
+</RelativeLayout>
