@@ -1,45 +1,85 @@
 package com.example.istiaqhaq.legistify;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
+import android.os.Handler;
+import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AbsListView;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 
 import adapter.CustomLawyerAdapter;
 import model.Lawyer;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends AppCompatActivity {
 
-    private ArrayList<Lawyer> list;
+    private ArrayList<Lawyer> lawyerArrayList;
     private CustomLawyerAdapter adapter;
-    private ListView lawyersList;
+    private ListView lawyersListView;
     private EditText search_txt;
+    private ProgressBar progressBar;
+    private Handler mHandler;
+    private boolean hasCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        setData();
+        mHandler = new Handler();
+        //inflate the progress bar from the footer, it is wrapped in a RelativeLayout since
+        //ListViews don't shrink in height when a child is set to visibility gone, but
+        //a RelativeLayout with height of wrap_content will
+        View footer = getLayoutInflater().inflate(R.layout.load_more, null);
+        progressBar = (ProgressBar) footer.findViewById(R.id.progressBar);
+
+        // Getting ListView object ID from xml
+        lawyersListView = (ListView)findViewById(R.id.lawyer_list);
+        lawyersListView.addFooterView(footer);
+        setListView();
+
+        lawyersListView.setOnScrollListener(new AbsListView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                if (firstVisibleItem + visibleItemCount == totalItemCount && !adapter.endReached() && !hasCallback) { //check if we've reached the bottom
+                    mHandler.postDelayed(showMore, 500);
+                    hasCallback = true;
+                }
+            }
+        });
+
+        ImageButton filter_btn = (ImageButton)findViewById(R.id.filterButton);
+        filter_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(MainActivity.this, FilterLawyer.class);
+                i.putExtra("DataStore", lawyerArrayList);
+                startActivity(i);
+            }
+        });
 
         search_txt = (EditText) findViewById(R.id.searchBox);
         search_txt.addTextChangedListener(new TextWatcher() {
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before,
-                                      int count) {
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
 
             }
 
@@ -51,27 +91,51 @@ public class MainActivity extends ActionBarActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
-                if (0 != search_txt.getText().length()) {
+                if (search_txt.getText().length() != 0) {
                     SearchBoxResult(search_txt.getText().toString());
                 } else {
-                    setData();
+                    setListView();
                 }
-            }
-        });
-
-        ImageButton filter_btn = (ImageButton)findViewById(R.id.filterButton);
-        filter_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent i = new Intent(MainActivity.this,FilterLawyer.class);
-                startActivity(i);
             }
         });
     }
 
+    // Adding data to the listview
+    public void setListView() {
+        lawyerArrayList = new LawyerInformation().getData();
+        try {
+            filterData();
+        } catch(Exception e) {
+            if(lawyerArrayList.size()>10) {
+                setMyAdapter(this, lawyerArrayList, 10, 10);
+            } else {
+                setMyAdapter(this, lawyerArrayList, lawyerArrayList.size(), lawyerArrayList.size());
+                progressBar.setVisibility((10 < lawyerArrayList.size()) ? View.VISIBLE : View.GONE);
+            }
+        }
+    }
+
+    private void setMyAdapter(Activity context, ArrayList<Lawyer> list, int startCount, int stepNumber) {
+        adapter = new CustomLawyerAdapter(this, list, startCount, stepNumber);
+        lawyersListView.setAdapter(adapter);
+    }
+
+    // Extracting lawyer object based on user selected options
+    public void filterData() {
+        ArrayList<Lawyer> filteredLawyerList = (ArrayList<Lawyer>) getIntent().getSerializableExtra("filterValue");
+        if (filteredLawyerList.size() > 0) {
+            if(filteredLawyerList.size()>10) {
+                setMyAdapter(this, filteredLawyerList, 10, 10);
+            } else {
+                setMyAdapter(this, filteredLawyerList, filteredLawyerList.size(), filteredLawyerList.size());
+                progressBar.setVisibility((10 < filteredLawyerList.size()) ? View.VISIBLE : View.GONE);
+            }
+        }
+    }
+
     public void SearchBoxResult(String str) {
         ArrayList<Lawyer> searchList = new ArrayList<Lawyer>();
-        for(Lawyer lawyer : list){
+        for(Lawyer lawyer : lawyerArrayList){
             if (lawyer.getName().toLowerCase().contains(str.toLowerCase())) {
                 searchList.add(lawyer);
                 adapter.notifyDataSetChanged();
@@ -117,224 +181,12 @@ public class MainActivity extends ActionBarActivity {
                 adapter.notifyDataSetChanged();
             }
         }
-        adapter = new CustomLawyerAdapter(this, searchList);
-        lawyersList.setAdapter(adapter);
-    }
 
-    // Adding data to the listview
-    public void setData() {
-
-        // Defined Array values to show in ListView
-        String[][] lawyerArray =  {
-                {"Name","Notary","Property","Divorce","Matrimonial","Criminal","Family","Civil","Consumer","Contact","Address","City","State"},
-                {"Surendra Rakhashia", "true", "false", "true", "false", "false", "false", "false", "false", "+(91)-9687008080","555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Ahmedabad", "Gujarat"},
-                {"Kaushik Dave And Associates", "false", "false", "true", "true", "false", "false", "true", "false", "+(91)-9687008080","555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Bangalore", "Karnataka"},
-                {"Jani And Company", "true", "false", "true", "false", "true", "false", "false", "false", "+(91)-9687008080", "555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Chandigarh", "Punjab"},
-                {"Rajendra D Raval",  "true", "false", "true", "false", "false", "false", "false", "false", "+(91)-9687008080","555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Chennai", "Tamil Nadu"},
-                {"Pradip Rajput",  "true", "false", "false", "false", "false", "false", "false", "false", "+(91)-9687008080","555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Coimbatore", "Tamil Nadu"},
-                {"NOTERY -KIRTIKUMAR R KAPADIA",  "false", "false", "true", "false", "false", "false", "false", "false", "+(91)-9687008080","555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Delhi", "Delhi"},
-                {"Ramdas Rathor", "true", "true", "true", "false", "false", "false", "false", "false", "+(91)-9687008080", "555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Goa", "Maharashtra", },//
-                {"Meenaben Thakkar",  "false", "false", "false", "false", "false", "true", "true", "false", "+(91)-9687008080","555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Gurgaon", "Haryana"},
-                {"Hasmukh L Patel", "false", "true", "false", "true", "false", "false", "false", "true", "+(91)-9687008080","555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Coimbatore", "Tamil Nadu"},
-                {"Ashok M Patel",  "false", "true", "false", "false", "true", "false", "true", "false", "+(91)-9687008080","555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Delhi", "Delhi"},
-                {"Nanji G Thakor", "false", "false", "false", "true", "false", "true", "true", "false", "+(91)-9687008080", "555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Goa", "Maharashtra"},
-                {"Bharat C Sheth", "false", "false", "true", "false", "false", "true", "false", "true", "+(91)-9687008080", "555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Bangalore", "Karnataka"},
-                {"Kiran D Khunti", "false", "false", "false", "false", "false", "false", "false", "true", "+(91)-9687008080", "555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Chandigarh", "Punjab"},
-                {"Surendra Rakhashia", "false", "false", "true", "false", "true", "false", "true", "false", "+(91)-9687008080", "555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Delhi", "Delhi"},
-                {"Vishal J Brahmbhatt", "false", "true", "false", "true", "false", "true", "false", "false", "+(91)-9687008080", "555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Goa", "Maharashtra"},
-                {"Sharad N Darji", "true", "false", "false", "false", "false", "true", "false", "true", "+(91)-9687008080", "555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Ahmedabad", "Gujarat"},
-                {"Khalida Momin", "false", "true", "false", "false", "true", "false", "true", "false", "+(91)-9687008080", "555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Delhi", "Delhi"},
-                {"Surendra Rakhashia", "true", "false", "true", "false", "false", "false", "false", "false", "+(91)-9687008080","555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Ahmedabad", "Gujarat"},
-                {"Kaushik Dave And Associates", "false", "false", "true", "true", "false", "false", "true", "false", "+(91)-9687008080","555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Bangalore", "Karnataka"},
-                {"Jani And Company", "true", "false", "true", "false", "true", "false", "false", "false", "+(91)-9687008080", "555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Chandigarh", "Punjab"},
-                {"Rajendra D Raval",  "true", "false", "true", "false", "false", "false", "false", "false", "+(91)-9687008080","555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Chennai", "Tamil Nadu"},
-                {"Pradip Rajput",  "true", "false", "false", "false", "false", "false", "false", "false", "+(91)-9687008080","555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Coimbatore", "Tamil Nadu"},
-                {"NOTERY -KIRTIKUMAR R KAPADIA",  "false", "false", "true", "false", "false", "false", "false", "false", "+(91)-9687008080","555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Delhi", "Delhi"},
-                {"Ramdas Rathor", "true", "true", "true", "false", "false", "false", "false", "false", "+(91)-9687008080", "555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Goa", "Maharashtra", },//
-                {"Meenaben Thakkar",  "false", "false", "false", "false", "false", "true", "true", "false", "+(91)-9687008080","555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Gurgaon", "Haryana"},
-                {"Hasmukh L Patel", "false", "true", "false", "true", "false", "false", "false", "true", "+(91)-9687008080","555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Coimbatore", "Tamil Nadu"},
-                {"Ashok M Patel",  "false", "true", "false", "false", "true", "false", "true", "false", "+(91)-9687008080","555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Delhi", "Delhi"},
-                {"Nanji G Thakor", "false", "false", "false", "true", "false", "true", "true", "false", "+(91)-9687008080", "555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Goa", "Maharashtra"},
-                {"Bharat C Sheth", "false", "false", "true", "false", "false", "true", "false", "true", "+(91)-9687008080", "555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Bangalore", "Karnataka"},
-                {"Kiran D Khunti", "false", "false", "false", "false", "false", "false", "false", "true", "+(91)-9687008080", "555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Chandigarh", "Punjab"},
-                {"Surendra Rakhashia", "false", "false", "true", "false", "true", "false", "true", "false", "+(91)-9687008080", "555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Delhi", "Delhi"},
-                {"Vishal J Brahmbhatt", "false", "true", "false", "true", "false", "true", "false", "false", "+(91)-9687008080", "555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Goa", "Maharashtra"},
-                {"Sharad N Darji", "true", "false", "false", "false", "false", "true", "false", "true", "+(91)-9687008080", "555, Lakha Patel Pole, Shankadi Lane, Manek Chowk", "Ahmedabad", "Gujarat"},
-                {"Istiaque Siddiqi", "true", "true", "true", "true", "true", "true", "true", "true", "+(91)-9163179724", "4, Black Burn Shankadi Lane, Manek Chowk", "Kolkata", "West Bengal"}};
-
-        list = new ArrayList<Lawyer>();
-        for(int i=1; i<lawyerArray.length; i++) {
-            Lawyer lawyerInfo = new Lawyer();
-
-            lawyerInfo.setName(lawyerArray[i][0]);
-
-            lawyerInfo.setNotary(lawyerArray[i][1]);
-            lawyerInfo.setProperty(lawyerArray[i][2]);
-            lawyerInfo.setDivorce(lawyerArray[i][3]);
-            lawyerInfo.setMatrimonial(lawyerArray[i][4]);
-            lawyerInfo.setCriminal(lawyerArray[i][5]);
-            lawyerInfo.setFamily(lawyerArray[i][6]);
-            lawyerInfo.setCivil(lawyerArray[i][7]);
-            lawyerInfo.setConsumer(lawyerArray[i][8]);
-
-            lawyerInfo.setContact(lawyerArray[i][9]);
-
-            lawyerInfo.setAddress(lawyerArray[i][10]);
-            lawyerInfo.setCity(lawyerArray[i][11]);
-            lawyerInfo.setState(lawyerArray[i][12]);
-
-            list.add(lawyerInfo);
-        }
-
-        //Sorting list alphabetically based on Lawyers name
-        if (list.size() > 0) {
-            Collections.sort(list, new Comparator<Lawyer>() {
-                @Override
-                public int compare(final Lawyer lawyerObject1, final Lawyer lawyerObject2) {
-                    return lawyerObject1.getName().compareTo(lawyerObject2.getName());
-                }
-            });
-        }
-
-        try {
-            filterData();
-        } catch(Exception e) {
-            adapter = new CustomLawyerAdapter(this, list);
-        }
-        // Getting ListView object ID from xml
-        lawyersList = (ListView)findViewById(R.id.lawyer_list);
-        lawyersList.setAdapter(adapter);
-    }
-
-    // Extracting lawyer object based on user selected options
-    public void filterData() {
-        ArrayList<String> filterValue = (ArrayList<String>) getIntent().getSerializableExtra("filterValue");
-        if(filterValue.size()>0) {
-            ArrayList<Lawyer> filterList = new ArrayList<Lawyer>();
-            for(Lawyer lawyerDetails : list) {
-                if(filterValue.get(0).equals("") &&
-                        filterValue.get(1).equals(lawyerDetails.getState()) &&
-                        filterValue.get(2).equals("")) {
-                    filterList.add(lawyerDetails);
-                } else if(filterValue.get(0).equals("") &&
-                        filterValue.get(1).equals("") &&
-                        filterValue.get(2).equals(lawyerDetails.getCity())) {
-                    filterList.add(lawyerDetails);
-                }else if(lawyerDetails.getNotary().equals("true") && filterValue.get(0).equals("Notary") &&
-                        filterValue.get(1).equals("") && filterValue.get(2).equals("")) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getNotary().equals("true") && filterValue.get(0).equals("Notary") &&
-                        filterValue.get(1).equals(lawyerDetails.getState()) && filterValue.get(2).equals("")) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getNotary().equals("true") && filterValue.get(0).equals("Notary") &&
-                        filterValue.get(1).equals("") && filterValue.get(2).equals(lawyerDetails.getCity())) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getNotary().equals("true") &&
-                        filterValue.get(0).equals("Notary")&&
-                        filterValue.get(1).equals(lawyerDetails.getState()) &&
-                        filterValue.get(2).equals(lawyerDetails.getCity())) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getMatrimonial().equals("true") && filterValue.get(0).equals("Matrimonial") &&
-                        filterValue.get(1).equals("") && filterValue.get(2).equals("")) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getMatrimonial().equals("true") && filterValue.get(0).equals("Matrimonial") &&
-                        filterValue.get(1).equals(lawyerDetails.getState()) && filterValue.get(2).equals("")) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getMatrimonial().equals("true") && filterValue.get(0).equals("Matrimonial") &&
-                        filterValue.get(1).equals("") && filterValue.get(2).equals(lawyerDetails.getCity())) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getMatrimonial().equals("true") &&
-                        filterValue.get(0).equals("Matrimonial")&&
-                        filterValue.get(1).equals(lawyerDetails.getState()) &&
-                        filterValue.get(2).equals(lawyerDetails.getCity())) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getDivorce().equals("true") && filterValue.get(0).equals("Divorce") &&
-                        filterValue.get(1).equals("") && filterValue.get(2).equals("")) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getDivorce().equals("true") && filterValue.get(0).equals("Divorce") &&
-                        filterValue.get(1).equals(lawyerDetails.getState()) && filterValue.get(2).equals("")) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getDivorce().equals("true") && filterValue.get(0).equals("Divorce") &&
-                        filterValue.get(1).equals("") && filterValue.get(2).equals(lawyerDetails.getCity())) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getDivorce().equals("true") &&
-                        filterValue.get(0).equals("Divorce")&&
-                        filterValue.get(1).equals(lawyerDetails.getState()) &&
-                        filterValue.get(2).equals(lawyerDetails.getCity())) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getProperty().equals("true") && filterValue.get(0).equals("Property") &&
-                        filterValue.get(1).equals("") && filterValue.get(2).equals("")) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getProperty().equals("true") && filterValue.get(0).equals("Property") &&
-                        filterValue.get(1).equals(lawyerDetails.getState()) && filterValue.get(2).equals("")) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getProperty().equals("true") && filterValue.get(0).equals("Property") &&
-                        filterValue.get(1).equals("") && filterValue.get(2).equals(lawyerDetails.getCity())) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getProperty().equals("true") &&
-                        filterValue.get(0).equals("Property")&&
-                        filterValue.get(1).equals(lawyerDetails.getState()) &&
-                        filterValue.get(2).equals(lawyerDetails.getCity())) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getCriminal().equals("true") && filterValue.get(0).equals("Criminal") &&
-                        filterValue.get(1).equals("") && filterValue.get(2).equals("")) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getCriminal().equals("true") && filterValue.get(0).equals("Criminal") &&
-                        filterValue.get(1).equals(lawyerDetails.getState()) && filterValue.get(2).equals("")) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getCriminal().equals("true") && filterValue.get(0).equals("Criminal") &&
-                        filterValue.get(1).equals("") && filterValue.get(2).equals(lawyerDetails.getCity())) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getCriminal().equals("true") &&
-                        filterValue.get(0).equals("Criminal")&&
-                        filterValue.get(1).equals(lawyerDetails.getState()) &&
-                        filterValue.get(2).equals(lawyerDetails.getCity())) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getFamily().equals("true") && filterValue.get(0).equals("Family") &&
-                        filterValue.get(1).equals("") && filterValue.get(2).equals("")) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getFamily().equals("true") && filterValue.get(0).equals("Family") &&
-                        filterValue.get(1).equals(lawyerDetails.getState()) && filterValue.get(2).equals("")) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getFamily().equals("true") && filterValue.get(0).equals("Family") &&
-                        filterValue.get(1).equals("") && filterValue.get(2).equals(lawyerDetails.getCity())) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getFamily().equals("true") &&
-                        filterValue.get(0).equals("Family")&&
-                        filterValue.get(1).equals(lawyerDetails.getState()) &&
-                        filterValue.get(2).equals(lawyerDetails.getCity())) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getCivil().equals("true") && filterValue.get(0).equals("Civil") &&
-                        filterValue.get(1).equals("") && filterValue.get(2).equals("")) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getCivil().equals("true") && filterValue.get(0).equals("Civil") &&
-                        filterValue.get(1).equals(lawyerDetails.getState()) && filterValue.get(2).equals("")) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getCivil().equals("true") && filterValue.get(0).equals("Civil") &&
-                        filterValue.get(1).equals("") && filterValue.get(2).equals(lawyerDetails.getCity())) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getCivil().equals("true") &&
-                        filterValue.get(0).equals("Civil")&&
-                        filterValue.get(1).equals(lawyerDetails.getState()) &&
-                        filterValue.get(2).equals(lawyerDetails.getCity())) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getConsumer().equals("true") && filterValue.get(0).equals("Consumer") &&
-                        filterValue.get(1).equals("") && filterValue.get(2).equals("")) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getConsumer().equals("true") && filterValue.get(0).equals("Consumer") &&
-                        filterValue.get(1).equals(lawyerDetails.getState()) && filterValue.get(2).equals("")) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getConsumer().equals("true") && filterValue.get(0).equals("Consumer") &&
-                        filterValue.get(1).equals("") && filterValue.get(2).equals(lawyerDetails.getCity())) {
-                    filterList.add(lawyerDetails);
-                } else if(lawyerDetails.getConsumer().equals("true") &&
-                        filterValue.get(0).equals("Consumer")&&
-                        filterValue.get(1).equals(lawyerDetails.getState()) &&
-                        filterValue.get(2).equals(lawyerDetails.getCity())) {
-                    filterList.add(lawyerDetails);
-                }
-            }
-            adapter = new CustomLawyerAdapter(this, filterList);
+        if(searchList.size()>10) {
+            setMyAdapter(this, searchList, 10, 10);
+        } else {
+            setMyAdapter(this, searchList, searchList.size(), searchList.size());
+            progressBar.setVisibility((10 < searchList.size()) ? View.VISIBLE : View.GONE);
         }
     }
 
@@ -353,10 +205,28 @@ public class MainActivity extends ActionBarActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_reset) {
+            //adapter.reset(); //reset the adapter to its initial configuration
+            //lawyersListView.setSelection(0); //go to the top
+            if(lawyerArrayList.size()>10) {
+                setMyAdapter(this, lawyerArrayList, 10, 10);
+            } else {
+                setMyAdapter(this, lawyerArrayList, lawyerArrayList.size(), lawyerArrayList.size());
+                progressBar.setVisibility((10 < lawyerArrayList.size()) ? View.VISIBLE : View.GONE);
+            }
+            search_txt.setText("");
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
+
+    private Runnable showMore = new Runnable(){
+        @Override
+        public void run(){
+            boolean noMoreToShow = adapter.showMore(); //show more views and find out if
+            progressBar.setVisibility(noMoreToShow? View.GONE : View.VISIBLE);
+            hasCallback = false;
+        }
+    };
 }

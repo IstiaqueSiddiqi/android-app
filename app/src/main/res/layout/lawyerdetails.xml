@@ -24,7 +24,8 @@
         android:layout_toRightOf="@+id/proimg"
         android:textStyle="bold"
         android:textColor="@color/bright_foreground_inverse_material_light"
-        android:textAppearance="?android:attr/textAppearanceMedium"/>
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:singleLine="true"/>
 
     <TextView
         android:id="@+id/lawyerExpertise"
@@ -37,7 +38,8 @@
         android:layout_marginTop="25dp"
         android:layout_toRightOf="@+id/proimg"
         android:textStyle="italic"
-        android:textColor="@color/bright_foreground_inverse_material_light"/>
+        android:textColor="@color/bright_foreground_inverse_material_light"
+        android:singleLine="true"/>
 
     <TextView
         android:id="@+id/lawyerContact"

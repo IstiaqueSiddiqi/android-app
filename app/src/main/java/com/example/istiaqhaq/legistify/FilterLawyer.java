@@ -1,15 +1,15 @@
 package com.example.istiaqhaq.legistify;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ListView;
 import android.widget.Spinner;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,10 +24,7 @@ public class FilterLawyer extends Activity {
     private ArrayList<String> lawFiled_list, state_list, city_list;
     private Spinner lawField, state, city;
     private String lawFieldName, stateName, cityName;
-
-    private ListView lawyersList;
     private Button filter;
-    private ArrayList<Lawyer> filterList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,15 +133,160 @@ public class FilterLawyer extends Activity {
         filter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ArrayList<String> filterValue = new ArrayList<String>();
-                filterValue.add(lawFieldName);
-                filterValue.add(stateName);
-                filterValue.add(cityName);
-                Intent i = new Intent(FilterLawyer.this, MainActivity.class);
-                i.putExtra("filterValue", filterValue);
-                startActivity(i);
+                ArrayList<Lawyer> filterList = getData();
+                if (filterList.size() == 0) {
+                    AlertDialog alertDialog = new AlertDialog.Builder(FilterLawyer.this).create();
+                    alertDialog.setTitle("Alert");
+                    alertDialog.setMessage("No Record Found !!");
+                    alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    Intent i = new Intent(FilterLawyer.this, MainActivity.class);
+                                    startActivity(i);
+                                    dialog.dismiss();
+                                }
+                            });
+                    alertDialog.show();
+                } else {
+                    Intent i = new Intent(FilterLawyer.this, MainActivity.class);
+                    i.putExtra("filterValue", filterList);
+                    startActivity(i);
+                }
+
             }
         });
 
+    }
+
+    private ArrayList<Lawyer> getData() {
+        ArrayList<Lawyer> lawyerArrayList = (ArrayList<Lawyer>)getIntent().getSerializableExtra("DataStore");
+        ArrayList<Lawyer> filterList = null;
+        if(lawyerArrayList.size()>0) {
+            filterList = new ArrayList<Lawyer>();
+            for (Lawyer lawyerDetails : lawyerArrayList) {
+                if (lawFieldName.equals("") &&
+                        stateName.equals(lawyerDetails.getState()) &&
+                        cityName.equals("")) {
+                    filterList.add(lawyerDetails);
+                } else if (lawFieldName.equals("") &&
+                        stateName.equals("") &&
+                        cityName.equals(lawyerDetails.getCity())) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getNotary().equals("true") && lawFieldName.equals("Notary")) &&
+                        stateName.equals("") && cityName.equals("")) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getNotary().equals("true") && lawFieldName.equals("Notary")) &&
+                        stateName.equals(lawyerDetails.getState()) && cityName.equals("")) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getNotary().equals("true") && lawFieldName.equals("Notary")) &&
+                        stateName.equals("") && cityName.equals(lawyerDetails.getCity())) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getNotary().equals("true") &&
+                        lawFieldName.equals("Notary")) &&
+                        stateName.equals(lawyerDetails.getState()) &&
+                        cityName.equals(lawyerDetails.getCity())) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getMatrimonial().equals("true") && lawFieldName.equals("Matrimonial")) &&
+                        stateName.equals("") && cityName.equals("")) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getMatrimonial().equals("true") && lawFieldName.equals("Matrimonial")) &&
+                        stateName.equals(lawyerDetails.getState()) && cityName.equals("")) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getMatrimonial().equals("true") && lawFieldName.equals("Matrimonial")) &&
+                        stateName.equals("") && cityName.equals(lawyerDetails.getCity())) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getMatrimonial().equals("true") &&
+                        lawFieldName.equals("Matrimonial")) &&
+                        stateName.equals(lawyerDetails.getState()) &&
+                        cityName.equals(lawyerDetails.getCity())) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getDivorce().equals("true") && lawFieldName.equals("Divorce")) &&
+                        stateName.equals("") && cityName.equals("")) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getDivorce().equals("true") && lawFieldName.equals("Divorce")) &&
+                        stateName.equals(lawyerDetails.getState()) && cityName.equals("")) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getDivorce().equals("true") && lawFieldName.equals("Divorce")) &&
+                        stateName.equals("") && cityName.equals(lawyerDetails.getCity())) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getDivorce().equals("true") &&
+                        lawFieldName.equals("Divorce")) &&
+                        stateName.equals(lawyerDetails.getState()) &&
+                        cityName.equals(lawyerDetails.getCity())) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getProperty().equals("true") && lawFieldName.equals("Property")) &&
+                        stateName.equals("") && cityName.equals("")) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getProperty().equals("true") && lawFieldName.equals("Property")) &&
+                        stateName.equals(lawyerDetails.getState()) && cityName.equals("")) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getProperty().equals("true") && lawFieldName.equals("Property")) &&
+                        stateName.equals("") && cityName.equals(lawyerDetails.getCity())) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getProperty().equals("true") &&
+                        lawFieldName.equals("Property")) &&
+                        stateName.equals(lawyerDetails.getState()) &&
+                        cityName.equals(lawyerDetails.getCity())) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getCriminal().equals("true") && lawFieldName.equals("Criminal")) &&
+                        stateName.equals("") && cityName.equals("")) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getCriminal().equals("true") && lawFieldName.equals("Criminal")) &&
+                        stateName.equals(lawyerDetails.getState()) && cityName.equals("")) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getCriminal().equals("true") && lawFieldName.equals("Criminal")) &&
+                        stateName.equals("") && cityName.equals(lawyerDetails.getCity())) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getCriminal().equals("true") &&
+                        lawFieldName.equals("Criminal")) &&
+                        stateName.equals(lawyerDetails.getState()) &&
+                        cityName.equals(lawyerDetails.getCity())) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getFamily().equals("true") && lawFieldName.equals("Family")) &&
+                        stateName.equals("") && cityName.equals("")) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getFamily().equals("true") && lawFieldName.equals("Family")) &&
+                        stateName.equals(lawyerDetails.getState()) && cityName.equals("")) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getFamily().equals("true") && lawFieldName.equals("Family")) &&
+                        stateName.equals("") && cityName.equals(lawyerDetails.getCity())) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getFamily().equals("true") &&
+                        lawFieldName.equals("Family")) &&
+                        stateName.equals(lawyerDetails.getState()) &&
+                        cityName.equals(lawyerDetails.getCity())) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getCivil().equals("true") && lawFieldName.equals("Civil")) &&
+                        stateName.equals("") && cityName.equals("")) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getCivil().equals("true") && lawFieldName.equals("Civil")) &&
+                        stateName.equals(lawyerDetails.getState()) && cityName.equals("")) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getCivil().equals("true") && lawFieldName.equals("Civil")) &&
+                        stateName.equals("") && cityName.equals(lawyerDetails.getCity())) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getCivil().equals("true") &&
+                        lawFieldName.equals("Civil")) &&
+                        stateName.equals(lawyerDetails.getState()) &&
+                        cityName.equals(lawyerDetails.getCity())) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getConsumer().equals("true") && lawFieldName.equals("Consumer")) &&
+                        stateName.equals("") && cityName.equals("")) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getConsumer().equals("true") && lawFieldName.equals("Consumer")) &&
+                        stateName.equals(lawyerDetails.getState()) && cityName.equals("")) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getConsumer().equals("true") && lawFieldName.equals("Consumer")) &&
+                        stateName.equals("") && cityName.equals(lawyerDetails.getCity())) {
+                    filterList.add(lawyerDetails);
+                } else if ((lawyerDetails.getConsumer().equals("true") &&
+                        lawFieldName.equals("Consumer")) &&
+                        stateName.equals(lawyerDetails.getState()) &&
+                        cityName.equals(lawyerDetails.getCity())) {
+                    filterList.add(lawyerDetails);
+                }
+            }
+        }
+        return filterList;
     }
 }

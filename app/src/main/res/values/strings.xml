@@ -2,7 +2,7 @@
     <string name="app_name">Legistify</string>
 
     <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
+    <string name="action_reset">Reset</string>
     <string name="lawField">Law Field</string>
     <string name="state">State</string>
     <string name="city">City</string>
